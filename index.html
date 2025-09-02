@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Química das Emoções - Mobile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; background: #f0f8ff; padding: 10px; }
+  h1 { color: #333; font-size: 24px; }
+  .question { margin: 20px; font-size: 20px; }
+  button { 
+    padding: 15px; 
+    margin: 10px 0; 
+    font-size: 18px; 
+    width: 90%; 
+    border: none; 
+    border-radius: 10px; 
+    cursor: pointer;
+    background-color: #87ceeb;
+    color: white;
+  }
+  button:hover { background-color: #00bfff; }
+  #result { margin-top: 15px; font-size: 18px; color: #333; white-space: pre-line; }
+  canvas { margin-top: 20px; width: 90%; max-width: 400px; height: 200px; border: 1px solid #ccc; }
+</style>
+</head>
+<body>
+
+<h1>Química das Emoções</h1>
+
+<div id="game">
+  <div class="question" id="question">Clique em começar para iniciar o jogo!</div>
+  <button onclick="nextQuestion()">Começar</button>
+  <div id="options"></div>
+  <div id="result"></div>
+  <canvas id="chart"></canvas>
+</div>
+
+<script>
+let currentQuestion = -1;
+
+const questions = [
+  { text: "Você vai apresentar um trabalho importante. O que faz?",
+    options: [
+      {text: "Respirar fundo e se acalmar", effects: {serotonina: +2, cortisol: -2}},
+      {text: "Tomar café e se energizar", effects: {adrenalina: +2, dopamina: +1}}
+    ]},
+  { text: "Você reencontra um amigo querido depois de muito tempo. O que sente?",
+    options: [
+      {text: "Abraça e conversa animadamente", effects: {oxitocina: +3, dopamina: +2}},
+      {text: "Fica tímido e hesita", effects: {cortisol: +1}}
+    ]},
+  { text: "Está correndo e percebe que vai perder o ônibus!",
+    options: [
+      {text: "Corre rápido para pegar", effects: {adrenalina: +3, cortisol: +1}},
+      {text: "Decide esperar o próximo", effects: {serotonina: +1}}
+    ]},
+  { text: "Você ganha um chocolate que queria há dias!",
+    options: [
+      {text: "Come e se delicia", effects: {dopamina: +3}},
+      {text: "Compartilha com um amigo", effects: {dopamina: +1, oxitocina: +2}}
+    ]},
+  { text: "Você precisa estudar para uma prova difícil.",
+    options: [
+      {text: "Foca concentrado e revisa bastante", effects: {dopamina: +2, cortisol: +1}},
+      {text: "Deixa para estudar depois", effects: {cortisol: +2}}
+    ]}
+];
+
+let chemicals = {dopamina: 0, serotonina: 0, adrenalina: 0, cortisol: 0, oxitocina: 0};
+
+function nextQuestion() {
+  currentQuestion++;
+  if(currentQuestion >= questions.length) {
+    document.getElementById("question").innerText = "Fim do jogo! Veja seus resultados nos gráficos.";
+    document.getElementById("options").innerHTML = "";
+    drawChart();
+    return;
+  }
+  const q = questions[currentQuestion];
+  document.getElementById("question").innerText = q.text;
+  const optionsDiv = document.getElementById("options");
+  optionsDiv.innerHTML = "";
+  q.options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.innerText = opt.text;
+    btn.onclick = () => chooseOption(opt);
+    optionsDiv.appendChild(btn);
+  });
+  document.getElementById("result").innerText = "";
+}
+
+function chooseOption(option) {
+  for(let chem in option.effects) chemicals[chem] += option.effects[chem];
+  let feedback = "Níveis químicos alterados:\n";
+  for(let chem in option.effects) feedback += `${chem}: ${option.effects[chem] > 0 ? "+" : ""}${option.effects[chem]}\n`;
+  document.getElementById("result").innerText = feedback;
+  setTimeout(nextQuestion, 1500);
+}
+
+function drawChart() {
+  const canvas = document.getElementById("chart");
+  const ctx = canvas.getContext("2d");
+  canvas.width = canvas.clientWidth;
+  canvas.height = 200;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const keys = Object.keys(chemicals);
+  const max = Math.max(...Object.values(chemicals), 1);
+  const barWidth = (canvas.width / keys.length) * 0.6;
+  keys.forEach((key, index) => {
+    const height = (chemicals[key]/max) * 150;
+    ctx.fillStyle = "#00bfff";
+    ctx.fillRect(index*(canvas.width/keys.length) + 10, canvas.height - height - 20, barWidth, height);
+    ctx.fillStyle = "#000";
+    ctx.fillText(key, index*(canvas.width/keys.length) + 15, canvas.height - 5);
+    ctx.fillText(chemicals[key], index*(canvas.width/keys.length) + 25, canvas.height - height - 25);
+  });
+}
+</script>
+
+</body>
+</html>
